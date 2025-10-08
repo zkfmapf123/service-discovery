@@ -10,14 +10,20 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/zkfmapf123/msa-discovery/internal"
+	"github.com/zkfmapf123/msa-discovery/internal/dispatcher"
+	"github.com/zkfmapf123/msa-discovery/internal/handlers"
+	"github.com/zkfmapf123/msa-discovery/utils"
 )
 
 var (
-	PORT = os.Getenv("PORT")
+	// PORT = os.Getenv("PORT")
+	PORT           = "8080"
+	JOB_QUEUE_SIZE = 100
 )
 
 func main() {
+
+	queue := dispatcher.NewQueue(JOB_QUEUE_SIZE)
 
 	server := http.Server{
 		Addr:    fmt.Sprintf(":%s", PORT),
@@ -25,12 +31,14 @@ func main() {
 	}
 
 	// healt check
-	server.Handler = http.HandlerFunc(internal.HealthCheck)
+	server.Handler = http.HandlerFunc(utils.DiscoverHandlers(queue, handlers.HealthCheck))
 
 	// sd register
 	// http.HandleFunc("/register", nil)
 	// http.HandleFunc("/deregister", nil)
 	// http.HandleFunc("/update", nil)
+
+	go queue.Dispatcher(context.Background())
 
 	go func() {
 		log.Println("Service Discovery is running on port", PORT)
@@ -60,5 +68,4 @@ func main() {
 
 func init() {
 	fmt.Println("Service Discovery")
-
 }
