@@ -1,0 +1,10 @@
+attributes:
+  payment:
+    url: http://localhost
+    port: 8080
+  order:
+    url: https://localhost
+    port: 8081
+    
+
+    
